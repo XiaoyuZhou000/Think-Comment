@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<exe4j version="9.0" transformSequenceNumber="3">
+  <directoryPresets config="E:/学而思代码/comment/comment/out/artifacts/comment_jar" />
+  <application name="comment" distributionSourceDir="E:/学而思代码/comment" />
+  <executable name="comment" wrapperType="embed" executableMode="gui" />
+  <java mainClass="com.example.comment.HelloApplication" minVersion="9" maxVersion="21">
+    <classPath>
+      <archive location="E:/学而思代码/comment/comment/out/artifacts/comment_jar/comment.jar" failOnError="false" />
+    </classPath>
+  </java>
+</exe4j>
