@@ -63,14 +63,18 @@ public class CommentGenerator {
                 output += HelloApplication.quizConcept3 + comma;
             }
             output = output.substring(0,output.length()-1);
-            output += "。" + HelloApplication.quizComment + startAnewLine;
+            output += "。" ;
+            if (!HelloApplication.quizComment.isEmpty()) {
+                output += HelloApplication.quizComment + startAnewLine;
+            }
         }
 
         Map<String, String> lastHWPageToConcept = HelloApplication.lastHWPageToConcept;
 
         String hwWrongPage = HelloApplication.hwWrongPage;
         if (hwWrongPage.isEmpty()) {
-            output += name + "的作业全对哦！很厉害，希望再接再厉！" + startAnewLine;
+            output += "";
+//                    name + "的作业全对哦！很厉害，希望再接再厉！" + startAnewLine;
         } else {
             output += "上周作业错题页数： ";
 //        if (hwWrongPage.isEmpty()) {
@@ -83,9 +87,9 @@ public class CommentGenerator {
                 output += lastHWPageToConcept.get(page) + comma;
             }
             output = output.substring(0,output.length()-1);
-            output += "。" + startAnewLine;
+            output += "。";
         }
-        output += HelloApplication.currentHW + startAnewLine;
+        output += startAnewLine + HelloApplication.currentHW + startAnewLine;
 
 
 
