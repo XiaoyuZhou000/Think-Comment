@@ -12,6 +12,8 @@ module com.example.comment {
     requires com.almasb.fxgl.all;
     requires java.datatransfer;
     requires java.desktop;
+    requires opencsv;
+    requires spring.core;
 
     opens com.example.comment to javafx.fxml;
     exports com.example.comment;

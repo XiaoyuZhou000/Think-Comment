@@ -3,11 +3,16 @@ package com.example.comment;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+
+import java.awt.*;
 import java.awt.datatransfer.StringSelection;
-import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 
 import java.io.*;
@@ -18,6 +23,7 @@ public class HelloApplication extends Application {
 
     public static String currComment;
     public static String filePath = new File("commentsProfile.txt").getAbsolutePath();
+    public static String userSettingFilePath = new File("user").getAbsolutePath();
 
     // Constant
     public static final int leftX = 100;
@@ -90,12 +96,15 @@ public class HelloApplication extends Application {
     public static boolean lessonConcept2Check2;
     public static boolean lessonConcept3Check;
     public static boolean lessonConcept3Check2;
-//    public static int quizCorrectTotal = 0;
     public static boolean quizQ1Check;
     public static boolean quizQ2Check;
     public static boolean quizQ3Check;
     public static String quizComment;
     public static String hwWrongPage;
+    public static String hwComment;
+
+    // User setting
+    public static boolean alwaysOpenCSV = false;
 
 
 
@@ -105,6 +114,7 @@ public class HelloApplication extends Application {
 //        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
 
 //        System.out.println("javafx.runtime.version: " + System.getProperty("javafx.runtime.version"));
+        loadUserSetting();
         AnchorPane root = new AnchorPane();
         Scene scene = new Scene(root, 1280, 720);
         stage.setTitle("反馈生成");
@@ -474,7 +484,7 @@ public class HelloApplication extends Application {
 
 
 
-        Label hwWrongQLabel = new Label("上周错题页数(留白表示没有错题，页数用空格隔开。例如：1 2):");
+        Label hwWrongQLabel = new Label("上周作业错题页数(留白表示没有错题，页数用空格隔开。例如：1 2):");
         hwWrongQLabel.setLayoutX(rightX);
         hwWrongQLabel.setLayoutY(topY+330);
 
@@ -482,6 +492,19 @@ public class HelloApplication extends Application {
         hwWrongQField.setPromptText("Enter your text here");
         hwWrongQField.setLayoutX(rightX);
         hwWrongQField.setLayoutY(topY+350);
+
+        Label hwCommentLabel = new Label("作业评语");
+        hwCommentLabel.setLayoutX(rightX);
+        hwCommentLabel.setLayoutY(topY+380);
+
+        TextArea hwCommentArea = new TextArea();
+        hwCommentArea.setPromptText("作业评语");
+        hwCommentArea.setLayoutX(rightX);
+        hwCommentArea.setLayoutY(topY+400);
+        hwCommentArea.setWrapText(true);
+        hwCommentArea.setPrefWidth(300);
+        hwCommentArea.setPrefHeight(100);
+
 
 
 
@@ -508,6 +531,7 @@ public class HelloApplication extends Application {
             name = nameField.getText();
             hwWrongPage = hwWrongQField.getText();
             quizComment = quizCommentArea.getText();
+            hwComment = hwCommentArea.getText();
 
 
             currComment = CommentGenerator.commentGenerator();
@@ -537,10 +561,34 @@ public class HelloApplication extends Application {
             clipboardObj.setContents(stringSelectionObj, null);
         });
 
-        Button submitForAllButton = new Button("Generate From File");
+        Button submitForAllButton = new Button("Generate From Table");
         submitForAllButton.setLayoutX(640);
         submitForAllButton.setLayoutY(30);
+        submitForAllButton.setOnAction(e -> {
+            GeneratorForFile.generatorForFile();
+        });
 
+        Button openGeneratedCSV = new Button("Open Generated File");
+        openGeneratedCSV.setLayoutX(780);
+        openGeneratedCSV.setLayoutY(30);
+        openGeneratedCSV.setOnAction(e -> {
+            if (Desktop.isDesktopSupported()) {
+                try {
+                    Desktop.getDesktop().open(new File(new File("output comments.csv").getAbsolutePath()));
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        CheckBox alwaysOpenGeneratedCSV = new CheckBox("Always Open The Generated File After Generating");
+        alwaysOpenGeneratedCSV.setSelected(alwaysOpenCSV);
+        alwaysOpenGeneratedCSV.setLayoutX(920);
+        alwaysOpenGeneratedCSV.setLayoutY(35);
+        alwaysOpenGeneratedCSV.setOnAction(actionEvent -> {
+            alwaysOpenCSV = alwaysOpenGeneratedCSV.isSelected();;
+            writeUserSetting();
+        });
 
         root.getChildren().addAll(
                 nameLebel,
@@ -561,14 +609,19 @@ public class HelloApplication extends Application {
                 quizCommentArea,
                 hwWrongQLabel,
                 hwWrongQField,
+                hwCommentLabel,
+                hwCommentArea,
                 submitButton,
                 submitPrompt,
-                submitForAllButton
+                submitForAllButton,
+                openGeneratedCSV,
+                alwaysOpenGeneratedCSV
         );
     }
 
     public static void main(String[] args) {
-        checkProfileExists();
+        checkProfileExists(userSettingFilePath);
+        checkProfileExists(filePath);
         launch();
     }
 
@@ -641,6 +694,9 @@ public class HelloApplication extends Application {
             hwConceptPage3 = input[index++];
             hwConcept3 = input[index++];
             currentHW = input[index++];
+            lastHWPageToConcept.put(hwConceptPage1, hwConcept1);
+            lastHWPageToConcept.put(hwConceptPage2, hwConcept2);
+            lastHWPageToConcept.put(hwConceptPage3, hwConcept3);
 
             lessonField.setText(lesson);
             lessonTopicField.setText(lessonTopic);
@@ -670,11 +726,31 @@ public class HelloApplication extends Application {
         }
     }
 
-    public static void checkProfileExists() {
+    public static void writeUserSetting() {
+        String textToWrite = alwaysOpenCSV?"1":"0";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(userSettingFilePath))) {
+            writer.write(textToWrite);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void loadUserSetting() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(userSettingFilePath))) {
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                alwaysOpenCSV = (line.equals("1"));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void checkProfileExists(String path) {
         try {
-            if (!new File(filePath).exists()) {
+            if (!new File(path).exists()) {
 //                System.out.println(filePath);
-                new File(filePath).createNewFile();
+                new File(path).createNewFile();
             }
 //            System.out.println(filePath);
 
