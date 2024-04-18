@@ -111,7 +111,7 @@ public class GeneratorForFile {
             }
 
 //            writer.close();
-            writeCSV(outputFilePath, comments);
+//            writeCSV(outputFilePath, comments);
 
             try (CSVWriter writer = new CSVWriter(new OutputStreamWriter(new FileOutputStream(outputFilePath),
                     "GBK"))) {
@@ -132,7 +132,7 @@ public class GeneratorForFile {
 
 //            System.out.println(lines);
 
-            if (Desktop.isDesktopSupported()) {
+            if (Desktop.isDesktopSupported()&&HelloApplication.alwaysOpenCSV) {
                 try {
                     Desktop.getDesktop().open(new File(new File("output comments.csv").getAbsolutePath()));
                 } catch (IOException ex) {
